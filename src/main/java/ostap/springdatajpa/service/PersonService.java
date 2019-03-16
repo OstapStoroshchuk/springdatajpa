@@ -57,7 +57,7 @@ public class PersonService {
 //        File pathFile = new File("C:\\Users\\user\\Desktop\\myPictures");//for Windows
         File pathFile = new File("src/main/resources/static/images");//for mac or linux
         if (!pathFile.exists()) {
-            pathFile.mkdirs();
+            pathFile.mkdirs(); // blalala
         }
         //        File file = new File(pathFile+"\\"+fileCustom.getOriginalFilename()); //for windows
         File file = new File(pathFile + "/" + fileCustom.getOriginalFilename()); //for mac
