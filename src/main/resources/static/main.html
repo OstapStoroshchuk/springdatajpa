@@ -1,0 +1,190 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Main</title>
+    <link rel="stylesheet" href="css/main.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+<!-- Trigger/Open The Modal -->
+<button id="openModal">Create Person</button>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+    <!-- Modal content -->
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="close">&times;</span>
+            <h2>Create person</h2>
+        </div>
+        <div class="modal-body">
+            <div>
+                <form>
+                    <label for="fname">First Name</label><br>
+                    <input type="text" id="fname" name="firstname" placeholder="Your name.."><br>
+                    <label for="lname">Last Name</label><br>
+                    <input type="text" id="lname" name="lastname" placeholder="Your last name.."><br>
+                    <label for="age">Age</label><br>
+                    <input type="number" id="age" name="age" placeholder="Your age.."><br>
+                    <label for="photo">Age</label><br>
+                    <input type="file" id="photo" name="photo" placeholder="Your photo.."><br>
+                    <input type="button" id="btnCreatePerson" value="Create">
+                </form>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <h3>Form for new person</h3>
+        </div>
+    </div>
+
+</div>
+
+
+<table id="persons">
+    <tr>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Age</th>
+        <th>Photo</th>
+        <th>Delete Button</th>
+    </tr>
+</table>
+
+<script>
+    var mainUrl = "http://localhost:8080";
+    var mainUrlForPhoto = "http:\\\\localhost:8080";
+
+    getAllPersons();
+    setModalConfiguration();
+    setActionOnCreateBtn();
+
+
+    //start when load page PS reload page for triggered http request
+    function getAllPersons() {
+        $.ajax({
+            url: mainUrl + "/person?page=0&size=10&sortFieldName=firstName&direction=ASC",
+            type: "GET",
+            contentType: "application/json",
+            success: function (dataResponse) {
+                setPersonsToTable(dataResponse.data);
+                setActionOnDeleteButtons();
+            },
+            error: function (error) {
+                alert(error.message);
+            }
+        });
+    }
+
+    function setPersonsToTable(persons) {
+        for (var i = 0; i < persons.length; i++) {
+            setPersonToTable(persons[i]);
+        }
+    }
+
+    function setPersonToTable(person) {
+        var tableOfPersons = $("#persons");
+        tableOfPersons.append('<tr>' +
+                '<td>' + person.firstName + '</td>' +
+                '<td>' + person.lastName + '</td>' +
+                '<td>' + person.age + '</td>' +
+                '<td><img src="'+mainUrlForPhoto+person.pathToPhoto+'" style="max-width:100px; max-height:100px;"></td>' +
+                '<td><button class="button" value="' + person.id + '">Delete</button></td>' +
+                '</tr>');
+    }
+
+    //delete process
+    function setActionOnDeleteButtons() {
+        $(".button").each(function (index) {
+            $(this).click(function () {
+                $.ajax({
+                    url: mainUrl + "/person/" + $(this).val(),
+                    type: "DELETE",
+                    success: function (data) {
+                        location.reload();
+                    },
+                    error: function (error) {
+                        alert(error.message);
+                    }
+                });
+            })
+        })
+
+    }
+
+    function getBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    function setActionOnCreateBtn() {
+        $("#btnCreatePerson").click(function () {
+            var file = document.getElementById("photo").files[0];
+            console.log(file);
+            getBase64(file).then(
+                    data => {
+                        var firstName = $("#fname").val();
+                        var lastName = $("#lname").val();
+                        var age = $("#age").val();
+                        var photo = data;
+                        var newPerson = {
+                            "firstName": firstName,
+                            "lastName": lastName,
+                            "age": age,
+                            "photo": photo
+                        };
+
+                        $.ajax({
+                            url: mainUrl + "/person",
+                            type: "POST",
+                            contentType: "application/json",
+                            data: JSON.stringify(newPerson),
+                            success: function (data) {
+                                location.reload();
+                            },
+                            error: function (error) {
+                                alert(error.message);
+                            }
+                        });
+
+                    });
+        });
+    }
+
+    function setModalConfiguration() {
+        // Get the modal
+        var modal = document.getElementById('myModal');
+
+        // Get the button that opens the modal
+        var btn = document.getElementById("openModal");
+
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks the button, open the modal
+        btn.onclick = function () {
+            modal.style.display = "block";
+        };
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function () {
+            modal.style.display = "none";
+        };
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+    }
+
+
+</script>
+</body>
+</html>
